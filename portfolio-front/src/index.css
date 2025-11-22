@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pode adicionar estilos globais aqui se quiser, ex: fundo escuro */
+body {
+  @apply bg-slate-900 text-slate-100;
+}
