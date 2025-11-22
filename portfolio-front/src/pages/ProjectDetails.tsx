@@ -10,7 +10,8 @@ export function ProjectDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/projects/${slug}`)
+    const API_URL = import.meta.env.VITE_API_URL;
+    axios.get(`${API_URL}/projects/${slug}`)
       .then(response => {
         setProject(response.data);
         setLoading(false);

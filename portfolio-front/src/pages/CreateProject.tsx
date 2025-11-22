@@ -65,7 +65,8 @@ export function CreateProject() {
     setLoading(true);
     
     try {
-      await axios.post('http://localhost:5000/api/projects', {
+      const API_URL = import.meta.env.VITE_API_URL;
+      await axios.post(`${API_URL}/projects`, {
         ...formData
       }, {
         headers: {

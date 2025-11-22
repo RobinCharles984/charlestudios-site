@@ -11,7 +11,8 @@ function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/projects')
+    const API_URL = import.meta.env.VITE_API_URL;
+    axios.get(`${API_URL}/projects`)
       .then(response => {
         setProjects(response.data);
         setLoading(false);
