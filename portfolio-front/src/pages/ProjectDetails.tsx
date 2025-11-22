@@ -64,10 +64,10 @@ export function ProjectDetails() {
         <h3 className="text-2xl font-bold mb-6">Comments</h3>
         <Giscus
           id="comments"
-          repo="RobinCharles984/Start-Gamedev" // SEU REPO
-          repoId="R_kgDONQ0R3w" // SEU ID
+          repo="RobinCharles984/charlestudios-site-comments" // SEU REPO
+          repoId="R_kgDOQaZIyg" // SEU ID
           category="General"
-          categoryId="DIC_kwDONQ0R384CkfqI" // SEU ID
+          categoryId="DIC_kwDOQaZIys4CyDV5" // SEU ID
           mapping="pathname" 
           strict="0"
           reactionsEnabled="1"
