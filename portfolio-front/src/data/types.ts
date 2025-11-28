@@ -1,8 +1,10 @@
-//Isto é o padrão que será enviado para o MongoDB
-//Seguindo a mesma arquitetura tanto pro front quanto pro back
+export interface IQuiz {
+  fileName: string;
+  content: string;
+}
 
 export interface IProject {
-  _id: string; // MongoDB usa _id
+  _id: string;
   title: string;
   slug: string;
   description: string;
@@ -10,4 +12,10 @@ export interface IProject {
   githubLink?: string;
   itchioLink?: string;
   createdAt?: string;
+  type: 'project' | 'study';
+  
+  // ⚠️ Atualizado
+  quizzes?: IQuiz[]; 
+  
+  galleryImages?: string[];
 }

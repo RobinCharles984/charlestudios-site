@@ -69,6 +69,41 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
+// 4. PUT - Atualizar um projeto existente
+app.put('/api/projects/:id', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== process.env.ADMIN_SECRET) {
+     return res.status(403).json({ message: 'Senha errada, impostor!' });
+  }
+
+  try {
+    // Atualiza e retorna o objeto novo
+    const updatedProject = await Project.findByIdAndUpdate(
+      req.params.id, 
+      req.body, 
+      { new: true } // Importante: Retorna o dado atualizado, não o antigo
+    );
+    res.json(updatedProject);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao atualizar', error });
+  }
+});
+
+// 5. DELETE - Excluir um projeto
+app.delete('/api/projects/:id', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== process.env.ADMIN_SECRET) {
+     return res.status(403).json({ message: 'Senha errada, impostor!' });
+  }
+
+  try {
+    await Project.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Projeto deletado com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao deletar', error });
+  }
+});
+
 // --- CONEXÃO COM O BANCO E START ---
 
 // Se não tiver string de conexão, avisa

@@ -12,178 +12,211 @@ export function CreateProject() {
     description: '',
     githubLink: '',
     itchioLink: '',
-    coverImageUrl: '', // Aqui vai entrar a URL ou o Base64 da imagem
-    adminSecret: ''
+    coverImageUrl: '',
+    adminSecret: '',
+    type: 'project',       
+    quizzes: [] as { fileName: string, content: string }[], // ✅ Lista de Quizzes
+    galleryImages: [] as string[]
   });
 
-  // --- Função Mágica: Converte Arquivo para Base64 ---
+  // Converte Imagem para Base64
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file);
-      fileReader.onload = () => {
-        resolve(fileReader.result as string);
-      };
-      fileReader.onerror = (error) => {
-        reject(error);
-      };
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
     });
   };
 
-  // Lida com o Upload de Arquivo
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const base64 = await convertToBase64(file);
-        setFormData(prev => ({ ...prev, coverImageUrl: base64 }));
-      } catch (error) {
-        console.error("Erro ao converter imagem", error);
+  // Lê arquivo HTML como Texto
+  const readHtmlFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>, field: string) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (field === 'cover') {
+      const base64 = await convertToBase64(files[0]);
+      setFormData(prev => ({ ...prev, coverImageUrl: base64 }));
+    } 
+    else if (field === 'html') {
+      // ✅ Lógica Nova: Múltiplos Arquivos
+      if (files.length > 10) {
+        alert("Sensei, o limite é de 10 simulados por post!");
+        return;
       }
+
+      const newQuizzes: { fileName: string; content: string; }[] = [];
+      
+      // Loop para processar todos os arquivos selecionados
+      for (let i = 0; i < files.length; i++) {
+        const text = await readHtmlFile(files[i]);
+        // Remove a extensão .html para o nome ficar limpo
+        const cleanName = files[i].name.replace('.html', ''); 
+        newQuizzes.push({ fileName: cleanName, content: text });
+      }
+
+      setFormData(prev => ({ ...prev, quizzes: newQuizzes }));
+    }
+    else if (field === 'gallery') {
+      const newImages: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const base64 = await convertToBase64(files[i]);
+        newImages.push(base64);
+      }
+      setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...newImages] }));
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-
-    if (name === 'title') {
-      const autoSlug = value
-        .toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9 ]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/^-+|-+$/g, '');
-
-      setFormData(prev => ({ ...prev, title: value, slug: autoSlug }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
+  const handleChange = (e: any) => {
+     const { name, value } = e.target;
+     if (name === 'title') {
+        const slug = value.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9 ]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        setFormData(prev => ({...prev, title: value, slug}));
+     } else {
+        setFormData(prev => ({...prev, [name]: value}));
+     }
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
     try {
-      const API_URL = import.meta.env.VITE_API_URL;
-      await axios.post(`${API_URL}/projects`, {
-        ...formData
-      }, {
-        headers: {
-          'x-admin-secret': formData.adminSecret
-        }
+      // ✅ Envia o objeto completo (agora com quizzes array)
+      await axios.post(`${import.meta.env.VITE_API_URL}/projects`, formData, {
+         headers: { 'x-admin-secret': formData.adminSecret }
       });
-
-      alert('Project created successfully, Sensei!');
-      navigate('/'); 
+      alert('Content published!');
+      navigate('/');
     } catch (error) {
-      alert('Error! Check your password, image size, or if slug exists.');
       console.error(error);
-    } finally {
-      setLoading(false);
-    }
+      alert('Error publishing. Check admin key or file size.');
+    } finally { setLoading(false); }
   };
 
-  const labelStyle = "block text-sm font-medium text-slate-400 mb-1";
-  const inputStyle = "w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200";
+  const inputStyle = "w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none";
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white py-12 px-6 font-sans flex items-center justify-center">
-      <div className="max-w-3xl w-full bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700">
+    <div className="min-h-screen bg-slate-900 text-white py-12 px-6 flex justify-center">
+      <div className="max-w-3xl w-full bg-slate-800 p-8 rounded-2xl border border-slate-700">
         
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-            New Project
-          </h1>
-          <Link to="/" className="text-slate-400 hover:text-white transition text-sm">
-            ← Back to Home
-          </Link>
+        <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">New Content</h1>
+            <Link to="/" className="text-slate-400 hover:text-white text-sm">← Back</Link>
         </div>
-
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={labelStyle}>Project Title</label>
-              <input name="title" placeholder="Ex: Super 2D Game" value={formData.title} onChange={handleChange} required className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Slug (Friendly URL)</label>
-              <input name="slug" value={formData.slug} readOnly className={`${inputStyle} text-slate-400 bg-slate-950 cursor-not-allowed`} />
-            </div>
-          </div>
-
+          {/* SELEÇÃO DE TIPO */}
           <div>
-            <label className={labelStyle}>Description</label>
-            <textarea name="description" placeholder="Description..." value={formData.description} onChange={handleChange} required rows={5} className={inputStyle} />
+             <label className="block text-sm text-slate-400 mb-1">Type</label>
+             <select name="type" value={formData.type} onChange={handleChange} className={inputStyle}>
+                <option value="project">🚀 Project</option>
+                <option value="study">📚 Study / Quiz</option>
+             </select>
           </div>
 
-          {/* --- SEÇÃO DA IMAGEM (ATUALIZADA) --- */}
-          <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-            <label className={labelStyle}>Cover Image</label>
+          {/* Título e Slug */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm text-slate-400 mb-1">Title</label>
+                <input name="title" placeholder="Ex: Math Final Exam" value={formData.title} onChange={handleChange} className={inputStyle} required />
+            </div>
+            <div>
+                <label className="block text-sm text-slate-400 mb-1">Slug</label>
+                <input name="slug" value={formData.slug} readOnly className={`${inputStyle} text-slate-500 cursor-not-allowed`} />
+            </div>
+          </div>
+
+          {/* MARKDOWN DESCRIPTION */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">Description (Markdown Supported)</label>
+            <textarea name="description" placeholder="# Introduction&#10;This study covers..." value={formData.description} onChange={handleChange} rows={8} className={inputStyle} required />
+          </div>
+
+          {/* GALERIA DE IMAGENS */}
+          <div className="bg-slate-900/50 p-4 rounded border border-slate-700">
+            <label className="block text-sm text-indigo-400 font-bold mb-2">📸 Gallery (For Markdown)</label>
+            <input type="file" multiple accept="image/*" onChange={(e) => handleFileUpload(e, 'gallery')} className="block w-full text-sm text-slate-400"/>
             
-            {/* Opção 1: Upload */}
-            <div className="mb-3">
-              <span className="text-xs text-indigo-400 uppercase font-bold mb-2 block">Option A: Upload File</span>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="block w-full text-sm text-slate-400
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-full file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-indigo-600 file:text-white
-                  hover:file:bg-indigo-700
-                  cursor-pointer"
-              />
-            </div>
-
-            <div className="text-center text-slate-600 text-xs my-2">- OR -</div>
-
-            {/* Opção 2: Link URL */}
-            <div className="mb-3">
-              <span className="text-xs text-indigo-400 uppercase font-bold mb-2 block">Option B: Image URL</span>
-              <input 
-                name="coverImageUrl" 
-                placeholder="https://..." 
-                value={formData.coverImageUrl} 
-                onChange={handleChange} 
-                className={inputStyle}
-              />
-            </div>
-
-            {/* Preview */}
-            {formData.coverImageUrl && (
-              <div className="mt-4 h-48 w-full rounded-lg overflow-hidden bg-slate-950 border border-slate-600 relative">
-                <img src={formData.coverImageUrl} alt="Preview" className="w-full h-full object-cover" />
-                <div className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-white">Preview</div>
+            {formData.galleryImages.length > 0 && (
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+                {formData.galleryImages.map((img, idx) => (
+                  <div key={idx} className="min-w-[100px] text-center">
+                    <img src={img} className="h-16 w-16 object-cover rounded mx-auto border border-slate-600"/>
+                    <button type="button" onClick={() => navigator.clipboard.writeText(`![Img](${img})`)} className="text-[10px] bg-slate-700 px-2 py-1 rounded mt-1 hover:bg-indigo-600 w-full transition">
+                       Copy MD
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={labelStyle}>GitHub Link</label>
-              <input name="githubLink" placeholder="https://..." value={formData.githubLink} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Itch.io Link</label>
-              <input name="itchioLink" placeholder="https://..." value={formData.itchioLink} onChange={handleChange} className={inputStyle} />
-            </div>
+          {/* UPLOAD DE QUIZZES (Só aparece se for Study) */}
+          {formData.type === 'study' && (
+             <div className="bg-yellow-900/20 p-4 rounded border border-yellow-700/50">
+                <label className="block text-sm text-yellow-400 font-bold mb-2">📝 Upload Quizzes (.html) - Max 10</label>
+                <input 
+                    type="file" 
+                    accept=".html" 
+                    multiple  // ✅ Permite múltiplos arquivos
+                    onChange={(e) => handleFileUpload(e, 'html')} 
+                    className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-600 file:text-white hover:file:bg-yellow-700"
+                />
+                
+                {/* Lista os arquivos carregados */}
+                {formData.quizzes.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {formData.quizzes.map((q, idx) => (
+                            <span key={idx} className="bg-yellow-800/80 text-yellow-100 text-xs px-3 py-1 rounded-full border border-yellow-600 flex items-center gap-2">
+                                📄 {q.fileName}
+                            </span>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-yellow-700 text-xs mt-2 italic">No files selected yet.</p>
+                )}
+             </div>
+          )}
+
+          {/* Capa e Links */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">Cover Image (Optional)</label>
+            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} className="text-slate-400 text-sm"/>
           </div>
 
-          <hr className="border-slate-700 my-6" />
+          <div className="grid md:grid-cols-2 gap-4">
+             <div>
+                <label className="block text-sm text-slate-400 mb-1">GitHub Link</label>
+                <input name="githubLink" placeholder="https://..." value={formData.githubLink} onChange={handleChange} className={inputStyle} />
+             </div>
+             <div>
+                <label className="block text-sm text-slate-400 mb-1">Itch.io Link</label>
+                <input name="itchioLink" placeholder="https://..." value={formData.itchioLink} onChange={handleChange} className={inputStyle} />
+             </div>
+          </div>
+
+          <div className="bg-red-900/20 p-4 rounded border border-red-900/50">
+             <label className="block text-sm text-red-400 font-bold mb-1">Admin Key</label>
+             <input type="password" name="adminSecret" placeholder="Master Password" value={formData.adminSecret} onChange={handleChange} className="w-full bg-slate-900 border border-red-900/50 rounded-lg p-3 text-white placeholder-slate-600 focus:ring-2 focus:ring-red-500 outline-none" required />
+          </div>
           
-          <div className="bg-red-900/20 p-4 rounded-lg border border-red-900/50">
-            <label className="block text-sm font-bold text-red-400 mb-1">Admin Key</label>
-            <input type="password" name="adminSecret" placeholder="Master Password" value={formData.adminSecret} onChange={handleChange} required className="w-full bg-slate-900 border border-red-900/50 rounded-lg p-3 text-white placeholder-slate-600 focus:ring-2 focus:ring-red-500 outline-none transition" />
-          </div>
-
-          <button type="submit" disabled={loading} className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transform transition hover:scale-[1.01] ${loading ? 'bg-slate-700 cursor-wait text-slate-400' : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'}`}>
-            {loading ? 'Publishing...' : '🚀 Publish Project'}
+          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 py-3 rounded text-white font-bold hover:from-indigo-500 hover:to-purple-500 shadow-lg transform transition hover:scale-[1.01]">
+             {loading ? 'Publishing...' : '🚀 Publish Content'}
           </button>
-
         </form>
       </div>
     </div>
