@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import Giscus from '@giscus/react';
 import axios from 'axios';
@@ -105,9 +105,9 @@ export function ProjectDetails() {
           )}
           
           {/* Botão de Editar (Admin) */}
-          <a href={`/admin/edit/${project._id}`} className="ml-auto px-4 py-3 text-slate-500 hover:text-yellow-500 text-sm font-bold border border-transparent hover:border-yellow-500 rounded transition">
+          <Link to={`/admin/edit/${project._id}`} className="ml-auto px-4 py-3 text-slate-500 hover:text-yellow-500 text-sm font-bold border border-transparent hover:border-yellow-500 rounded transition">
             ✏️ Edit Page
-          </a>
+          </Link>
         </div>
         
         {/* 6. Comentários */}
