@@ -17,7 +17,7 @@ export function ProjectDetails() {
     const API_URL = import.meta.env.VITE_API_URL;
     axios.get(`${API_URL}/projects/${slug}`)
       .then(res => { setProject(res.data); setLoading(false); })
-      .catch(err => setLoading(false));
+      .catch(() => setLoading(false));
   }, [slug]);
 
   if (loading) return <div className="text-white p-10">Loading...</div>;
