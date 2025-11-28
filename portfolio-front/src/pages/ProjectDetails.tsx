@@ -29,6 +29,10 @@ export function ProjectDetails() {
     <div className="min-h-screen bg-slate-900 text-white font-sans pb-10">
       <div className="max-w-4xl mx-auto px-6 py-10">
         
+        <Link to="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition mb-8 text-sm font-bold group">
+          <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Home
+        </Link>
+
         {/* 1. Header (Badge e Título) */}
         <span className={`px-3 py-1 rounded text-xs font-bold uppercase ${project.type === 'study' ? 'bg-yellow-600 text-yellow-100' : 'bg-indigo-600 text-indigo-100'}`}>
           {project.type}
