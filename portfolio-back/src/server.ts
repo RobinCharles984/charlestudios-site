@@ -40,18 +40,26 @@ app.get('/api/projects/:slug', async (req, res) => {
   }
 });
 
-// 3. POST - Criar um novo projeto (AGORA PROTEGIDO)
+// 3. POST - Criar novo projeto (ATUALIZADO)
 app.post('/api/projects', async (req, res) => {
-  // Verifica a senha enviada no cabeçalho da requisição
   const adminSecret = req.headers['x-admin-secret'];
-  
   if (adminSecret !== process.env.ADMIN_SECRET) {
-     return res.status(403).json({ message: 'Sai daqui, impostor! Senha errada.' });
+     return res.status(403).json({ message: 'Senha errada, impostor!' });
   }
 
   try {
-    // ... (o resto do código continua igual)
-    const { title, slug, description, githubLink, itchioLink, coverImageUrl } = req.body;
+    // 👇 AQUI ESTAVA O PROBLEMA: Adicionamos type, quizzes e galleryImages
+    const { 
+      title, 
+      slug, 
+      description, 
+      githubLink, 
+      itchioLink, 
+      coverImageUrl, 
+      type, 
+      quizzes, 
+      galleryImages 
+    } = req.body;
     
     const newProject = new Project({
       title,
@@ -59,7 +67,10 @@ app.post('/api/projects', async (req, res) => {
       description,
       githubLink,
       itchioLink,
-      coverImageUrl
+      coverImageUrl,
+      type,           // Novo
+      quizzes,        // Novo
+      galleryImages   // Novo
     });
 
     await newProject.save();
@@ -69,7 +80,7 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
-// 4. PUT - Atualizar um projeto existente
+// 4. PUT - Atualizar projeto (ATUALIZADO)
 app.put('/api/projects/:id', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
   if (adminSecret !== process.env.ADMIN_SECRET) {
@@ -77,11 +88,11 @@ app.put('/api/projects/:id', async (req, res) => {
   }
 
   try {
-    // Atualiza e retorna o objeto novo
+    // O req.body já contém os campos novos, então passamos ele direto
     const updatedProject = await Project.findByIdAndUpdate(
       req.params.id, 
       req.body, 
-      { new: true } // Importante: Retorna o dado atualizado, não o antigo
+      { new: true }
     );
     res.json(updatedProject);
   } catch (error) {
