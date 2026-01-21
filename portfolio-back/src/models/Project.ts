@@ -12,12 +12,13 @@ export interface IProject extends Document {
   coverImageUrl?: string;
   githubLink?: string;
   itchioLink?: string;
-  artstationLink?: string; // ✨ NOVO
+  artstationLink?: string;
   tags: string[];
   createdAt: Date;
   
-  // 🔄 MUDANÇA: De 'type' string para 'types' array de strings
-  types: string[]; 
+  // Mantenha os dois para compatibilidade
+  type?: string;   // ⬅️ VOLTOU (Para ler os antigos)
+  types: string[]; // ⬅️ NOVO (Para os novos)
   
   quizzes?: IQuizFile[];
   galleryImages?: string[];
@@ -30,11 +31,14 @@ const ProjectSchema: Schema = new Schema({
   coverImageUrl: { type: String },
   githubLink: { type: String },
   itchioLink: { type: String },
-  artstationLink: { type: String }, // ✨ NOVO NO BANCO
+  artstationLink: { type: String },
   tags: [{ type: String }],
   createdAt: { type: Date, default: Date.now },
   
-  // 🔄 MUDANÇA: Array de Strings
+  // 👇 AQUI ESTÁ O SEGREDO: Adicionamos o antigo de volta
+  type: { type: String }, 
+  
+  // E mantemos o novo
   types: [{ type: String, enum: ['project', 'study', 'certificate'] }], 
 
   quizzes: [{
