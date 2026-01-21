@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export function CreateProject() {
   const navigate = useNavigate();
