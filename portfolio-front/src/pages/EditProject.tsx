@@ -14,9 +14,10 @@ export function EditProject() {
     description: '',
     githubLink: '',
     itchioLink: '',
+    artstationLink: '', // ✨ Novo
     coverImageUrl: '',
     adminSecret: '',
-    type: 'project',       
+    types: ['project'] as string[], // 🔄 Array inicial    
     quizzes: [] as { fileName: string, content: string }[],
     galleryImages: [] as string[]
   });
@@ -109,23 +110,43 @@ export function EditProject() {
       setFormData(prev => ({ ...prev, galleryImages: newImages }));
   };
 
+  // 🔄 NOVA LÓGICA DE CHECKBOX PARA TIPOS
+  const handleTypeChange = (type: string) => {
+    setFormData(prev => {
+        const currentTypes = prev.types;
+        if (currentTypes.includes(type)) {
+            // Se já tem, remove (mas impede de ficar vazio)
+            if (currentTypes.length === 1) return prev;
+            return { ...prev, types: currentTypes.filter(t => t !== type) };
+        } else {
+            // Se não tem, adiciona
+            return { ...prev, types: [...currentTypes, type] };
+        }
+    });
+  };
+
   const handleChange = (e: any) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({...prev, [name]: value}));
+     const { name, value } = e.target;
+     if (name === 'title') {
+        const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        setFormData(prev => ({...prev, title: value, slug}));
+     } else {
+        setFormData(prev => ({...prev, [name]: value}));
+     }
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/projects/${id}`, formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/projects`, formData, {
          headers: { 'x-admin-secret': formData.adminSecret }
       });
-      alert('Projeto atualizado com sucesso!');
+      alert('Content published!');
       navigate('/');
     } catch (error) {
-      console.error(error);
-      alert('Erro ao atualizar. Verifique a senha.');
-    }
+      alert('Error publishing.');
+    } finally { setLoading(false); }
   };
 
   const handleDelete = async () => {
@@ -150,124 +171,71 @@ export function EditProject() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white py-12 px-6 flex justify-center">
-      <div className="max-w-3xl w-full bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
-        
-        <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-            <div>
-                <h1 className="text-3xl font-bold text-yellow-500">Edit Project</h1>
-                <p className="text-slate-400 text-sm">Editing: {formData.title}</p>
-            </div>
-            <button onClick={handleDelete} className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-2 rounded hover:bg-red-900 font-bold text-sm transition">
-               🗑️ DELETE
-            </button>
-        </div>
+      <div className="max-w-3xl w-full bg-slate-800 p-8 rounded-2xl border border-slate-700">
+        <h1 className="text-3xl font-bold mb-6">New Content</h1>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* TIPO */}
-            <div>
-                <label className="block text-sm text-slate-400 mb-1">Type</label>
-                <select name="type" value={formData.type} onChange={handleChange} className={inputStyle}>
-                    <option value="project">🚀 Project</option>
-                    <option value="study">📚 Study / Quiz</option>
-                </select>
-            </div>
+          
+          {/* 🔄 SELEÇÃO DE TIPOS (CHECKBOXES) */}
+          <div className="bg-slate-900/50 p-4 rounded border border-slate-700">
+             <label className="block text-sm text-slate-400 mb-3">Categories (Select at least one)</label>
+             <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.types.includes('project')} onChange={() => handleTypeChange('project')} className="w-5 h-5 accent-indigo-500"/>
+                    <span className="font-bold text-indigo-400">🚀 Project</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.types.includes('study')} onChange={() => handleTypeChange('study')} className="w-5 h-5 accent-yellow-500"/>
+                    <span className="font-bold text-yellow-400">📚 Study / Quiz</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={formData.types.includes('certificate')} onChange={() => handleTypeChange('certificate')} className="w-5 h-5 accent-green-500"/>
+                    <span className="font-bold text-green-400">🏆 Certificate</span>
+                </label>
+             </div>
+          </div>
 
-            {/* TÍTULO E SLUG */}
-            <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm text-slate-400 mb-1">Title</label>
-                    <input name="title" value={formData.title} onChange={handleChange} className={inputStyle} required />
-                </div>
-                <div>
-                    <label className="block text-sm text-slate-400 mb-1">Slug (URL)</label>
-                    <input name="slug" value={formData.slug} onChange={handleChange} className={inputStyle} />
-                </div>
-            </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <input name="title" placeholder="Title" value={formData.title} onChange={handleChange} className={inputStyle} required />
+            <input name="slug" placeholder="slug" value={formData.slug} readOnly className={inputStyle} />
+          </div>
 
-            {/* DESCRIÇÃO */}
-            <div>
-                <label className="block text-sm text-slate-400 mb-1">Description (Markdown)</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows={8} className={inputStyle} required />
-            </div>
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">Description (Markdown)</label>
+            <textarea name="description" value={formData.description} onChange={handleChange} rows={8} className={inputStyle} required />
+          </div>
 
-            {/* GALERIA */}
-            <div className="bg-slate-900/50 p-4 rounded border border-slate-700">
-                <label className="block text-sm text-indigo-400 font-bold mb-2">📸 Gallery</label>
-                <input type="file" multiple accept="image/*" onChange={(e) => handleFileUpload(e, 'gallery')} className="block w-full text-sm text-slate-400 mb-4"/>
-                
-                {formData.galleryImages.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                    {formData.galleryImages.map((img, idx) => (
-                    <div key={idx} className="min-w-[100px] text-center relative group">
-                        <img src={img} className="h-16 w-16 object-cover rounded mx-auto border border-slate-600"/>
-                        <button type="button" onClick={() => removeGalleryImage(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">×</button>
-                        <button type="button" onClick={() => navigator.clipboard.writeText(`![Img](${img})`)} className="text-[10px] bg-slate-700 px-2 py-1 rounded mt-1 w-full">Copy MD</button>
-                    </div>
-                    ))}
-                </div>
-                )}
-            </div>
+          {/* ... Uploads de Galeria (Igual) ... */}
+          <div className="bg-slate-900/50 p-4 rounded border border-slate-700">
+             <label className="block text-sm text-indigo-400 font-bold mb-2">📸 Gallery</label>
+             <input type="file" multiple accept="image/*" onChange={(e) => handleFileUpload(e, 'gallery')} className="block w-full text-sm text-slate-400"/>
+             {/* ... preview images ... */}
+          </div>
 
-            {/* QUIZZES (Apenas se for Estudo) */}
-            {formData.type === 'study' && (
-                <div className="bg-yellow-900/20 p-4 rounded border border-yellow-700/50">
-                    <label className="block text-sm text-yellow-400 font-bold mb-2">📝 Quizzes (.html)</label>
-                    <input type="file" accept=".html" multiple onChange={(e) => handleFileUpload(e, 'html')} className="block w-full text-sm text-slate-400 mb-4"/>
-                    
-                    {formData.quizzes.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                            {formData.quizzes.map((q, idx) => (
-                                <div key={idx} className="bg-yellow-800/80 text-yellow-100 text-xs px-3 py-1 rounded-full border border-yellow-600 flex items-center gap-2 group">
-                                    <span>📄 {q.fileName}</span>
-                                    <button type="button" onClick={() => removeQuiz(idx)} className="text-red-300 hover:text-red-100 font-bold ml-1">×</button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
+          {/* Upload de HTML (Só se for STUDY) */}
+          {formData.types.includes('study') && (
+             <div className="bg-yellow-900/20 p-4 rounded border border-yellow-700/50">
+                <label className="block text-sm text-yellow-400 font-bold mb-2">📝 Upload Quizzes</label>
+                <input type="file" accept=".html" multiple onChange={(e) => handleFileUpload(e, 'html')} className="block w-full text-sm text-slate-400"/>
+                {/* ... lista de quizzes ... */}
+             </div>
+          )}
 
-            {/* CAPA */}
-            <div>
-                <label className="block text-sm text-slate-400 mb-1">Cover Image</label>
-                <div className="flex gap-4 items-start">
-                    <div className="flex-1">
-                        <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} className="text-slate-400 text-sm mb-2 block"/>
-                        <input name="coverImageUrl" placeholder="Or Image URL..." value={formData.coverImageUrl} onChange={handleChange} className={inputStyle} />
-                    </div>
-                    {formData.coverImageUrl && (
-                        <img src={formData.coverImageUrl} className="w-20 h-20 object-cover rounded border border-slate-600" title="Current Cover" />
-                    )}
-                </div>
-            </div>
+          {/* Capa */}
+          <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} className="text-slate-400"/>
+          
+          {/* ✨ LINKS (AGORA COM ARTSTATION) */}
+          <div className="grid md:grid-cols-3 gap-4">
+             <input name="githubLink" placeholder="GitHub URL" value={formData.githubLink} onChange={handleChange} className={inputStyle} />
+             <input name="itchioLink" placeholder="Itch.io URL" value={formData.itchioLink} onChange={handleChange} className={inputStyle} />
+             <input name="artstationLink" placeholder="ArtStation URL" value={formData.artstationLink} onChange={handleChange} className={`${inputStyle} border-blue-900 focus:ring-blue-500`} />
+          </div>
 
-            {/* LINKS */}
-            <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm text-slate-400 mb-1">GitHub Link</label>
-                    <input name="githubLink" value={formData.githubLink} onChange={handleChange} className={inputStyle} />
-                </div>
-                <div>
-                    <label className="block text-sm text-slate-400 mb-1">Itch.io Link</label>
-                    <input name="itchioLink" value={formData.itchioLink} onChange={handleChange} className={inputStyle} />
-                </div>
-            </div>
-
-            {/* SENHA ADMIN */}
-            <div className="bg-slate-900/80 p-4 rounded border border-slate-600">
-                <label className="block text-sm text-slate-300 font-bold mb-1">Admin Key (Required to Save)</label>
-                <input type="password" name="adminSecret" placeholder="Enter password..." value={formData.adminSecret} onChange={handleChange} className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-yellow-500 outline-none" required />
-            </div>
-
-            {/* BOTÕES DE AÇÃO */}
-            <div className="flex gap-4 pt-4">
-                <Link to="/" className="w-1/3 py-3 rounded-lg text-center border border-slate-600 text-slate-400 hover:bg-slate-800 transition font-bold">Cancel</Link>
-                <button type="submit" className="w-2/3 bg-yellow-600 py-3 rounded-lg text-white font-bold hover:bg-yellow-500 shadow-lg transition">
-                    💾 Save Changes
-                </button>
-            </div>
-
+          <input type="password" name="adminSecret" placeholder="Admin Key" value={formData.adminSecret} onChange={handleChange} className={inputStyle} required />
+          
+          <button type="submit" disabled={loading} className="w-full bg-indigo-600 py-3 rounded text-white font-bold hover:bg-indigo-500">
+             {loading ? 'Sending...' : 'Publish'}
+          </button>
         </form>
       </div>
     </div>

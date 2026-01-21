@@ -50,27 +50,19 @@ app.post('/api/projects', async (req, res) => {
   try {
     // 👇 AQUI ESTAVA O PROBLEMA: Adicionamos type, quizzes e galleryImages
     const { 
-      title, 
-      slug, 
-      description, 
-      githubLink, 
-      itchioLink, 
+      title, slug, description, githubLink, itchioLink, 
+      artstationLink, // ✨
       coverImageUrl, 
-      type, 
-      quizzes, 
-      galleryImages 
+      types, // 🔄 Agora é types (plural)
+      quizzes, galleryImages 
     } = req.body;
     
     const newProject = new Project({
-      title,
-      slug,
-      description,
-      githubLink,
-      itchioLink,
-      coverImageUrl,
-      type,           // Novo
-      quizzes,        // Novo
-      galleryImages   // Novo
+      title, slug, description, githubLink, itchioLink,
+      artstationLink, // ✨
+      coverImageUrl, 
+      types, // 🔄
+      quizzes, galleryImages
     });
 
     await newProject.save();

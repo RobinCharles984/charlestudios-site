@@ -1,9 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Definindo a estrutura de um Quiz individual
 interface IQuizFile {
-  fileName: string; // Nome do arquivo para aparecer no botão (ex: "Prova_01.html")
-  content: string;  // O código HTML
+  fileName: string;
+  content: string;
 }
 
 export interface IProject extends Document {
@@ -13,13 +12,14 @@ export interface IProject extends Document {
   coverImageUrl?: string;
   githubLink?: string;
   itchioLink?: string;
+  artstationLink?: string; // ✨ NOVO
   tags: string[];
   createdAt: Date;
-  type: 'project' | 'study';
   
-  // ⚠️ MUDANÇA AQUI: Array de Quizzes em vez de string única
-  quizzes?: IQuizFile[]; 
+  // 🔄 MUDANÇA: De 'type' string para 'types' array de strings
+  types: string[]; 
   
+  quizzes?: IQuizFile[];
   galleryImages?: string[];
 }
 
@@ -30,16 +30,17 @@ const ProjectSchema: Schema = new Schema({
   coverImageUrl: { type: String },
   githubLink: { type: String },
   itchioLink: { type: String },
+  artstationLink: { type: String }, // ✨ NOVO NO BANCO
   tags: [{ type: String }],
   createdAt: { type: Date, default: Date.now },
-  type: { type: String, default: 'project', enum: ['project', 'study'] },
   
-  // ⚠️ NOVO SCHEMA NO BANCO
+  // 🔄 MUDANÇA: Array de Strings
+  types: [{ type: String, enum: ['project', 'study', 'certificate'] }], 
+
   quizzes: [{
     fileName: { type: String, required: true },
     content: { type: String, required: true }
   }],
-  
   galleryImages: [{ type: String }]
 });
 

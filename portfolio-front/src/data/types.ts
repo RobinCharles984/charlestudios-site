@@ -11,11 +11,12 @@ export interface IProject {
   coverImageUrl?: string;
   githubLink?: string;
   itchioLink?: string;
+  artstationLink?: string; // ✨
   createdAt?: string;
-  type: 'project' | 'study';
   
-  // ⚠️ Atualizado
+  // 🔄 Agora é array
+  types: string[]; // ex: ['project', 'study']
+  
   quizzes?: IQuiz[]; 
-  
   galleryImages?: string[];
 }
