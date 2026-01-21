@@ -50,11 +50,12 @@ function Home() {
         
         <div className="mt-6 md:mt-0">
           <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
-            Hello, I'm Charles
+            Hello, I'm Tales
           </h1>
           <p className="text-xl text-slate-300 mt-4 max-w-lg">
             Fullstack Developer passionate about creating digital experiences and video games. 
             Focused on React, Node.js, and Game Dev (with Unity and Unreal Engine).
+            Nickname: Charles.
           </p>
           
           <div className="mt-6 flex flex-wrap gap-4 justify-center md:justify-start">

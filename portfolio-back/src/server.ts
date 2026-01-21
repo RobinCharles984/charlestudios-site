@@ -19,6 +19,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // --- ROTAS ---
 
+// 0. Rota de Keep-Alive (Ping)
+app.get('/api/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 // 1. GET - Listar todos os projetos
 app.get('/api/projects', async (req, res) => {
   try {
