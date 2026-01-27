@@ -48,14 +48,16 @@
 
 ## About The Project
 
-This project was created to showcase my work as a Fullstack and Game Developer. Unlike static portfolios, this application features a complete Content Management System (CMS) built from scratch.
+This project was created to showcase my work as a Fullstack and Game Developer. Unlike static portfolios, this application features a complete Content Management System (CMS) built from scratch, allowing for dynamic updates without redeploying the code.
 
 **Key Features:**
-* **Dynamic Project Loading:** Projects are fetched from a MongoDB database.
-* **Admin Dashboard:** A restricted area (`/admin/new`) allows the owner to create new posts securely.
-* **Image Upload:** Support for uploading project covers directly to the database (Base64) or using external URLs.
+* **Multi-Category System:** Projects can be categorized as `Project`, `Study`, or `Certificate`, appearing in specific tabs on the Home page.
+* **Interactive Study Simulator:** Support for uploading raw `.html` files (quizzes/simulations) that run directly within the project details page via a secure iframe.
+* **Dynamic Admin Dashboard:** Create, **Edit**, and **Delete** posts securely using an Admin Key.
+* **Rich Media Support:** Upload Cover images, Gallery images, and HTML files directly to the database (Base64).
+* **Enhanced Markdown:** Project descriptions support GitHub Flavored Markdown with custom styling for code blocks, tables, and lists.
+* **Keep-Alive System:** Automated ping mechanism to prevent the Backend from sleeping on free hosting tiers (Cold Start prevention).
 * **Community Integration:** Users can comment on projects using their GitHub accounts (via Giscus integration).
-* **Auto-Slug:** Automatic URL generation based on project titles.
 * **Responsive Design:** Fully adapted for mobile and desktop using Tailwind CSS.
 
 ## Built With
@@ -69,6 +71,7 @@ This project uses a separated Front-end and Back-end architecture:
 * [Express](https://expressjs.com/) - Web Framework
 * [MongoDB Atlas](https://www.mongodb.com/atlas) - Database
 * [Giscus](https://giscus.app/) - Comments System
+* [React Markdown](https://github.com/remarkjs/react-markdown) - Markdown Rendering
 
 ## Getting Started
 
@@ -100,15 +103,20 @@ npm install
 
 ### Environment Variables
 
-You need to configure the secrets for the Back-end.
+You need to configure the secrets for **BOTH** folders.
 
-1. Create a `.env` file inside the `portfolio-backend` folder.
-2. Add the following variables:
-
+**1. Back-end Configuration**
+Create a `.env` file inside the `portfolio-backend` folder:
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 ADMIN_SECRET=your_super_secret_password
+```
+
+**2. Front-end Configuration**
+Create a `.env` file inside the `portfolio-front` folder:
+```env
+VITE_API_URL=http://localhost:5000/api
 ```
 
 ## Usage
@@ -133,11 +141,10 @@ npm run dev
 
 ### Accessing Admin Area
 
-To post a new project:
-1. Go to `http://localhost:5173/admin/new`
-2. Fill in the project details.
-3. Enter the `ADMIN_SECRET` you defined in your `.env` file.
-4. Click Publish.
+1. **Create:** Go to `/admin/new` or click "Admin" in the footer.
+2. **Edit:** Go to any project page and click "✏️ Edit Page".
+3. **Delete:** Inside the Edit page, use the Delete button.
+4. **Publishing:** Fill in the details (Title, Markdown Description, Images, HTML Quizzes) and enter your `ADMIN_SECRET` to save.
 
 ## Roadmap
 
@@ -146,9 +153,12 @@ See the [open issues](https://github.com/RobinCharles984/charlestudios-site/issu
 * [x] Basic CRUD for Projects
 * [x] Image Upload Support
 * [x] Comment System
+* [x] Edit/Delete Functionality in Admin Panel
+* [x] Markdown Rendering (GitHub Flavored)
+* [x] HTML/Quiz File Upload Support
+* [x] Multi-category filtering (Project/Study/Certificate)
 * [ ] Dark/Light Mode Toggle
-* [ ] Edit/Delete Functionality in Admin Panel
-* [ ] Markdown Rendering for Descriptions
+* [ ] Auth System (JWT) instead of simple Secret Key
 
 ## Contributing
 
@@ -166,10 +176,11 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Authors
 
-* **Robin Charles** - *Fullstack & Game Developer* - [RobinCharles984](https://github.com/RobinCharles984/)
+* **Tales Machado** - *Fullstack & Game Developer* - [RobinCharles984](https://github.com/RobinCharles984/)
 
 ## Acknowledgements
 
 * [Giscus](https://giscus.app)
 * [Vite](https://vitejs.dev)
 * [Shields.io](https://shields.io)
+* [React Markdown](https://github.com/remarkjs/react-markdown)
