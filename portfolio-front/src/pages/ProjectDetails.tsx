@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import Giscus from '@giscus/react';
 import axios from 'axios';
-import remarkGfm from 'remark-gfm'; // Se não instalou, remova essa linha e a propriedade remarkPlugins lá embaixo
+import remarkGfm from 'remark-gfm'; 
 import type { IProject } from '../data/types';
 
 export function ProjectDetails() {
@@ -17,7 +17,6 @@ export function ProjectDetails() {
     axios.get(`${API_URL}/projects/${slug}`)
       .then(res => { 
         const data = res.data;
-        // Normalização de segurança
         if (!data.types) {
            data.types = data.type ? [data.type] : ['project'];
         }
@@ -27,31 +26,25 @@ export function ProjectDetails() {
       .catch(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <div className="text-white p-10">Loading...</div>;
-  if (!project) return <div className="text-white p-10">Not found!</div>;
+  if (loading) return <div className="text-white p-10 text-center">Loading project...</div>;
+  if (!project) return <div className="text-white p-10 text-center">Project not found!</div>;
 
   const hasQuizzes = project.quizzes && project.quizzes.length > 0;
   const isStudy = project.types.includes('study'); 
 
-  // 🎨 ESTILIZAÇÃO CUSTOMIZADA (Estilo GitHub)
+  // Componentes do Markdown Customizados
   const markdownComponents = {
-    // Títulos com borda embaixo e espaçamento
+    // Títulos e Textos
     h1: (props: any) => <h1 className="text-3xl font-bold border-b border-slate-700 pb-2 mb-6 mt-10 text-white" {...props} />,
     h2: (props: any) => <h2 className="text-2xl font-bold border-b border-slate-700 pb-2 mb-4 mt-8 text-white" {...props} />,
     h3: (props: any) => <h3 className="text-xl font-bold mb-3 mt-6 text-white" {...props} />,
-    
-    // Parágrafos com respiro
     p: (props: any) => <p className="mb-4 leading-7 text-slate-300 text-justify" {...props} />,
-    
-    // Listas com bolinhas/números e INDENTAÇÃO CORRETA
     ul: (props: any) => <ul className="list-disc pl-6 mb-4 space-y-2 text-slate-300 marker:text-indigo-500" {...props} />,
     ol: (props: any) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-slate-300 marker:text-indigo-500" {...props} />,
     li: (props: any) => <li className="pl-1" {...props} />,
-    
-    // Citações (Blockquotes)
     blockquote: (props: any) => <blockquote className="border-l-4 border-indigo-500 pl-4 py-1 my-6 italic text-slate-400 bg-slate-800/30 rounded-r" {...props} />,
     
-    // Código (Inline e Bloco)
+    // Código
     code: ({inline, className, children, ...props}: any) => {
       return inline ? (
         <code className="bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-sm font-mono border border-slate-700" {...props}>{children}</code>
@@ -62,11 +55,37 @@ export function ProjectDetails() {
       )
     },
     
-    // Links e Imagens
+    // Links
     a: (props: any) => <a className="text-indigo-400 hover:text-indigo-300 hover:underline font-medium decoration-2 underline-offset-2" target="_blank" rel="noopener noreferrer" {...props} />,
-    img: (props: any) => <img className="rounded-lg shadow-lg border border-slate-700 my-8 w-full max-h-[600px] object-cover" {...props} />,
     
-    // Tabelas (Se usar remark-gfm)
+    // 📸 IMAGENS INTELIGENTES (Aqui está o segredo)
+    img: ({node, src, alt, ...props}: any) => {
+      let finalSrc = src;
+      
+      // Se o link começar com "gallery:", pegamos a imagem do array
+      if (src && src.startsWith('gallery:')) {
+        const index = parseInt(src.split(':')[1]); // Pega o número depois dos dois pontos
+        if (project.galleryImages && project.galleryImages[index]) {
+          finalSrc = project.galleryImages[index];
+        } else {
+          return <div className="p-4 bg-red-900/50 border border-red-500 rounded text-red-200 text-sm">⚠️ Image not found: Gallery index {index}</div>;
+        }
+      }
+
+      return (
+        <figure className="my-8">
+            <img 
+                src={finalSrc} 
+                alt={alt} 
+                className="rounded-lg shadow-lg border border-slate-700 w-full max-h-[600px] object-cover" 
+                {...props} 
+            />
+            {alt && <figcaption className="text-center text-slate-500 text-sm mt-2 italic">{alt}</figcaption>}
+        </figure>
+      );
+    },
+
+    // Tabelas
     table: (props: any) => <div className="overflow-x-auto my-6"><table className="min-w-full text-left border-collapse border border-slate-700" {...props} /></div>,
     th: (props: any) => <th className="bg-slate-800 border border-slate-700 px-4 py-2 font-bold text-white" {...props} />,
     td: (props: any) => <td className="border border-slate-700 px-4 py-2 text-slate-300" {...props} />,
@@ -100,19 +119,16 @@ export function ProjectDetails() {
               <img src={project.coverImageUrl} className="w-full rounded-xl mb-8 object-cover max-h-[400px] shadow-lg border border-slate-700" />
             )}
 
-            {/* 🔥 MARKDOWN RENDERIZADO COM ESTILO GITHUB 🔥 */}
-            <div className="mb-16">
-              <ReactMarkdown 
-                components={markdownComponents} 
-                remarkPlugins={[remarkGfm]} // Remova se não instalou o pacote
-              >
+            {/* Texto do Post (Agora renderiza as imagens no meio!) */}
+            <div className="mb-12">
+              <ReactMarkdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
                 {project.description}
               </ReactMarkdown>
             </div>
 
-            {/* Simulador (Apenas para Estudos) */}
+            {/* Simulador (Studies) */}
             {isStudy && hasQuizzes && (
-            <div className="mb-12">
+            <div className="mb-12 border-t border-slate-800 pt-8">
                 <h2 className="text-2xl font-bold mb-4 border-l-4 border-yellow-500 pl-3">🎓 Interactive Simulator</h2>
                 {project.quizzes && project.quizzes.length > 1 && (
                 <div className="flex flex-wrap gap-2 mb-0">
@@ -146,6 +162,7 @@ export function ProjectDetails() {
             </div>
             )}
 
+            {/* Links Externos */}
             <div className="flex flex-wrap gap-4 mb-12 border-t border-slate-800 pt-8">
               {project.githubLink && (
                   <a href={project.githubLink} target="_blank" rel="noreferrer" className="px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition border border-slate-700 font-bold flex items-center gap-2">GitHub</a>
